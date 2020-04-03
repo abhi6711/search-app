@@ -20,7 +20,13 @@ class App extends Component {
    * This function will get the data by making an api call when user is online else it would fetch the from 
    * local storage
    */
-  getSearchData() {
+  getSearchData(isResetImagesData = true) {
+    return () => {
+      this.fetchSearchResult();
+    }
+  }
+
+  fetchSearchResult(isResetImagesData) {
     if (navigator.onLine && this.state.searchText) {
       fetch(`https://api.unsplash.com/search/photos?client_id=eJmS2hWCX__ewbRigkcQDxEql5rkOc5eEyanaapS6iU&page=3&query=${this.state.searchText}`,
         {
@@ -34,13 +40,13 @@ class App extends Component {
         .then(response => response.json())
         .then(jsonResponse => {
           this.setState((state) => ({
-            imagesData: state.imagesData.concat(jsonResponse.results)
+            imagesData: isResetImagesData ? jsonResponse.results : state.imagesData.concat(jsonResponse.results)
           }), () => {
             localStorage.setItem(this.state.searchText, JSON.stringify(this.state.imagesData));
           });
         });
     } else {
-      if(this.state.searchText && JSON.parse(localStorage.getItem(this.state.searchText))) {
+      if (this.state.searchText && JSON.parse(localStorage.getItem(this.state.searchText))) {
         this.setState({
           imagesData: JSON.parse(localStorage.getItem(this.state.searchText))
         })
@@ -56,7 +62,7 @@ class App extends Component {
   handleKeyPress(event) {
     switch (event.key) {
       case 'Enter':
-        this.getSearchData();
+        this.fetchSearchResult(true);
         event.preventDefault();
         break;
       default:
@@ -98,7 +104,7 @@ class App extends Component {
               onKeyDown={this.handleKeyPress}
               placeholder="Enter the value"
               className="search-input"></input>
-            <div className="search-cta md-f500 cp" onClick={this.getSearchData}>Search</div>
+            <div className="search-cta md-f500 cp" onClick={this.getSearchData()}>Search</div>
           </div>
 
           {
@@ -120,7 +126,7 @@ class App extends Component {
                 <div className="main-image">
                   <InfiniteScroll
                     dataLength={this.state.imagesData.length}
-                    next={this.getSearchData}
+                    next={this.getSearchData(false)}
                     hasMore={true}
                     loader={<h4>Loading...</h4>}
                   >
